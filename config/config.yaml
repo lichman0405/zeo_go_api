@@ -3,7 +3,7 @@ server:
   host: "0.0.0.0"
   read_timeout: 30s
   write_timeout: 30s
-  max_multipart_memory: 32MB
+  max_multipart_memory: 33554432  # 32MB in bytes
 
 zeo:
   executable_path: "network"
@@ -14,7 +14,7 @@ concurrency:
   max_workers: 0  # 0 = runtime.NumCPU()
   max_queue_size: 1000
   rate_limit_per_ip: 10  # requests per second
-  max_file_size: 100MB
+  max_file_size: 104857600  # 100MB in bytes
   max_concurrent_uploads: 50
 
 cache:

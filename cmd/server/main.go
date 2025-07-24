@@ -9,13 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"golang.org/x/time/rate"
 	"zeo-api/internal/api/handlers"
 	"zeo-api/internal/api/middleware"
 	"zeo-api/internal/config"
 	"zeo-api/internal/core/cache"
 	"zeo-api/internal/core/runner"
+
+	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -102,7 +103,11 @@ func main() {
 	}
 
 	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
+	router.Any("/health", func(c *gin.Context) {
+		if c.Request.Method == http.MethodHead {
+			c.Status(http.StatusOK)
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"status":    "healthy",
 			"timestamp": time.Now().UTC(),
