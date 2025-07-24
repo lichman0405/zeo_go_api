@@ -58,19 +58,11 @@ RUN wget ${ZEO_URL} && \
 # Copy the binary from builder stage
 COPY --from=builder /app/zeo-api /usr/local/bin/zeo-api
 
-# Create non-root user
-RUN addgroup --gid 1001 zeo && \
-    adduser --uid 1001 --gid 1001 --disabled-password --gecos "" zeo
-
 # Create workspace directory
-RUN mkdir -p /app/workspace /app/config && \
-    chown -R zeo:zeo /app
+RUN mkdir -p /app/workspace /app/config
 
 # Copy config file
 COPY --from=builder /app/config/config.yaml /app/config/config.yaml
-
-# Switch to non-root user
-USER zeo
 
 # Set working directory
 WORKDIR /app
