@@ -1,8 +1,14 @@
 # Multi-stage build for Go Zeo++ API
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24-bullseye AS builder
 
 # Install required packages
-RUN apk add --no-cache git build-base
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    wget \
+    make \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -20,30 +26,41 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o zeo-api cmd/server/main.go
 
 # Final stage
-FROM alpine:latest
+FROM debian:bullseye-slim
 
 # Install Zeo++ dependencies
-RUN apk add --no-cache \
-    g++ \
-    make \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
     wget \
+    make \
+    tar \
     git \
-    bash
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Zeo++
 WORKDIR /opt
-RUN wget http://www.zeoplusplus.org/zeo++-0.3.tar.gz && \
-    tar -xzf zeo++-0.3.tar.gz && \
-    cd zeo++-0.3 && \
-    make && \
-    make install
+
+# Define environment variables for Zeo++ versioning
+ENV ZEO_VERSION=0.3
+ENV ZEO_FILENAME=zeo++-${ZEO_VERSION}.tar.gz
+ENV ZEO_URL=http://www.zeoplusplus.org/${ZEO_FILENAME}
+ENV ZEO_FOLDER=zeo++-${ZEO_VERSION}
+
+# Download and build Zeo++
+RUN wget ${ZEO_URL} && \
+    tar -xzf ${ZEO_FILENAME} && \
+    cd ${ZEO_FOLDER}/voro++/src && make && \
+    cd ../.. && make && \
+    mv network /usr/local/bin/network && \
+    chmod +x /usr/local/bin/network && \
+    rm -rf ${ZEO_FILENAME} ${ZEO_FOLDER}
 
 # Copy the binary from builder stage
 COPY --from=builder /app/zeo-api /usr/local/bin/zeo-api
 
 # Create non-root user
-RUN addgroup -g 1001 -S zeo && \
-    adduser -S zeo -u 1001
+RUN addgroup --gid 1001 zeo && \
+    adduser --uid 1001 --gid 1001 --disabled-password --gecos "" zeo
 
 # Create workspace directory
 RUN mkdir -p /app/workspace /app/config && \
