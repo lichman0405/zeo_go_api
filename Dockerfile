@@ -1,5 +1,5 @@
 # Multi-stage build for Go Zeo++ API
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install required packages
 RUN apk add --no-cache git build-base
